@@ -91,14 +91,16 @@ class ELFWriter:
             sec.offset = offset
             offset += len(sec.padded_data())
 
+        shstrtab_sec_name: str = ".shstrtab"
+        shstrtab_sec_name_offset: int = self.shstrtab.add(shstrtab_sec_name)
         shstrtab_sec = Section(
-            name=".shstrtab",
+            name=shstrtab_sec_name,
             type=cast("int", ENUM_SH_TYPE["SHT_STRTAB"]),
             data=self.shstrtab.data,
             align=1,
+            name_offset=shstrtab_sec_name_offset,
+            offset=offset,
         )
-        shstrtab_sec.name_offset = self.shstrtab.add(shstrtab_sec.name)
-        shstrtab_sec.offset = offset
         offset += len(shstrtab_sec.data)
 
         shoff = align(offset, 8)
