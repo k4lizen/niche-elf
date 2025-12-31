@@ -1,6 +1,6 @@
 """The niche-elf library."""
 
 from .elf import ELFFile
-from .symbols import Symbol
+from .structures import Symbol
 
 __all__ = ["ELFFile", "Symbol"]
