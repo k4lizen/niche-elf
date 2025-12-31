@@ -1,25 +1,26 @@
 import struct
-from elftools.elf.constants import SH_TYPE, SH_FLAGS
-from elftools.elf.enums import ENUM_E_TYPE, ENUM_E_MACHINE
+from .symbols import Symbol
+from elftools.elf.constants import SH_FLAGS
+from elftools.elf.enums import ENUM_E_TYPE, ENUM_E_MACHINE, ENUM_SH_TYPE_BASE
 
 ELFCLASS64 = 2
 ELFDATA2LSB = 1
 
 
-def align(off, a):
+def align(off: int, a: int) -> int:
     return (off + a - 1) & ~(a - 1)
 
 
 class ELFWriter:
-    def __init__(self):
+    def __init__(self) -> None:
         self.sections = []
         self.section_names = [""]
 
-    def add_text_section(self, data: bytes):
+    def add_text_section(self, data: bytes) -> None:
         self.sections.append(
             {
                 "name": ".text",
-                "type": SH_TYPE.SHT_PROGBITS,
+                "type": ENUM_SH_TYPE_BASE["SHT_PROGBITS"],
                 "flags": SH_FLAGS.SHF_ALLOC | SH_FLAGS.SHF_EXECINSTR,
                 "data": data,
                 "align": 4,
@@ -29,7 +30,7 @@ class ELFWriter:
             }
         )
 
-    def add_symbols(self, symbols):
+    def add_symbols(self, symbols: list[Symbol]) -> None:
         strtab = b"\x00"
         offsets = {}
 
@@ -53,7 +54,7 @@ class ELFWriter:
         self.sections.append(
             {
                 "name": ".symtab",
-                "type": SH_TYPE.SHT_SYMTAB,
+                "type": ENUM_SH_TYPE_BASE["SHT_SYMTAB"],
                 "flags": 0,
                 "data": symtab,
                 "align": 8,
@@ -66,7 +67,7 @@ class ELFWriter:
         self.sections.append(
             {
                 "name": ".strtab",
-                "type": SH_TYPE.SHT_STRTAB,
+                "type": ENUM_SH_TYPE_BASE["SHT_STRTAB"],
                 "flags": 0,
                 "data": strtab,
                 "align": 1,
@@ -76,7 +77,7 @@ class ELFWriter:
             }
         )
 
-    def write(self, path):
+    def write(self, path: str) -> None:
         shstrtab = b"\x00"
         name_offsets = {}
 
@@ -154,7 +155,7 @@ class ELFWriter:
                 struct.pack(
                     "<IIQQQQIIQQ",
                     shstrtab_name_off,
-                    SH_TYPE.SHT_STRTAB,
+                    ENUM_SH_TYPE_BASE["SHT_STRTAB"],
                     0,
                     0,
                     shstrtab_off,
