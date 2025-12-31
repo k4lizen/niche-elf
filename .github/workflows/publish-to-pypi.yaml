@@ -2,6 +2,7 @@ name: Publish to pypi
 on: push
 
 # https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+# https://packaging.python.org/en/latest/tutorials/packaging-projects/
 
 jobs:
   build:
@@ -17,6 +18,9 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.x"
+
+      - name: Install build deps
+        run: python3 -m pip install --upgrade build
 
       - name: Build a binary wheel and a source tarball
         run: python3 -m build

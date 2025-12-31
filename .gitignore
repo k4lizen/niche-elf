@@ -3,3 +3,4 @@ niche_elf.egg-info
 **/__pycache__
 **/.gdb_history
 symbols.o
+dist
