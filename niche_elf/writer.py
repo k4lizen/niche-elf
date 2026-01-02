@@ -2,18 +2,11 @@
 
 import ctypes
 from pathlib import Path
-from typing import cast
 
 from elftools.elf.constants import SH_FLAGS
-from elftools.elf.enums import ENUM_SH_TYPE_BASE
 
 from . import datatypes
 from .structures import Section, SHStrTab, Symbol
-
-ELFCLASS64 = 2
-ELFDATA2LSB = 1
-
-ENUM_SH_TYPE = ENUM_SH_TYPE_BASE
 
 
 def align(offset: int, alignment: int) -> int:
@@ -37,16 +30,18 @@ class ELFWriter:
         null_section = Section(
             "doesntmatter",
             b"",
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            1,
-            0,
-            0,
+            header=self.ElfShdr(
+                sh_name=0,
+                sh_type=0,
+                sh_flags=0,
+                sh_addr=0,
+                sh_size=0,
+                sh_link=0,
+                sh_info=0,
+                sh_addralign=1,
+                sh_entsize=0,
+                sh_offset=0,
+            ),
         )
         self.sections: list[Section] = [null_section]
         self.shstrtab = SHStrTab()
@@ -55,16 +50,19 @@ class ELFWriter:
         name_offset = self.shstrtab.add(".text")
         sec = Section(
             name=".text",
-            sh_name=name_offset,
-            sh_type=cast("int", ENUM_SH_TYPE["SHT_PROGBITS"]),
-            sh_flags=SH_FLAGS.SHF_ALLOC | SH_FLAGS.SHF_EXECINSTR,
-            sh_addr=addr,
-            sh_size=len(data),
-            sh_link=0,
-            sh_info=0,
-            sh_addralign=4,
-            sh_entsize=0,
             data=data,
+            header=self.ElfShdr(
+                sh_name=name_offset,
+                sh_type=datatypes.Constants.SHT_PROGBITS,
+                sh_flags=SH_FLAGS.SHF_ALLOC | SH_FLAGS.SHF_EXECINSTR,
+                sh_addr=addr,
+                sh_size=len(data),
+                sh_link=0,
+                sh_info=0,
+                sh_addralign=4,
+                sh_entsize=0,
+                sh_offset=-1,  # Fixed later.
+            ),
         )
         self.sections.append(sec)
 
@@ -106,62 +104,70 @@ class ELFWriter:
         symtab_name_offset = self.shstrtab.add(".symtab")
         symtab_sec = Section(
             name=".symtab",
-            sh_name=symtab_name_offset,
-            sh_type=cast("int", ENUM_SH_TYPE["SHT_SYMTAB"]),
-            sh_flags=0,
-            sh_addr=0,
-            sh_size=len(symtab_data),
-            sh_link=strtab_index,
-            # See System V specific part of ELF.
-            # > A symbol table section's sh_info section header member holds
-            # > the symbol table index for the first non-local symbol.
-            # FIXME: Check does GDB actually look at this?
-            sh_info=1,
-            sh_addralign=8,
-            sh_entsize=24,
             data=symtab_data,
+            header=self.ElfShdr(
+                sh_name=symtab_name_offset,
+                sh_type=datatypes.Constants.SHT_SYMTAB,
+                sh_flags=0,
+                sh_addr=0,
+                sh_size=len(symtab_data),
+                sh_link=strtab_index,
+                # See System V specific part of ELF.
+                # > A symbol table section's sh_info section header member holds
+                # > the symbol table index for the first non-local symbol.
+                # FIXME: Check does GDB actually look at this?
+                sh_info=1,
+                sh_addralign=8,
+                sh_entsize=24,
+                sh_offset=-1,
+            ),
         )
         self.sections.append(symtab_sec)
 
         strtab_name_offset = self.shstrtab.add(".strtab")
         strtab_sec = Section(
             name=".strtab",
-            sh_name=strtab_name_offset,
-            sh_type=cast("int", ENUM_SH_TYPE["SHT_STRTAB"]),
-            sh_flags=0,
-            sh_addr=0,
-            sh_size=len(strtab),
-            sh_link=0,
-            sh_info=0,
-            sh_addralign=1,
-            sh_entsize=0,
             data=strtab,
+            header=self.ElfShdr(
+                sh_name=strtab_name_offset,
+                sh_type=datatypes.Constants.SHT_STRTAB,
+                sh_flags=0,
+                sh_addr=0,
+                sh_size=len(strtab),
+                sh_link=0,
+                sh_info=0,
+                sh_addralign=1,
+                sh_entsize=0,
+                sh_offset=-1,
+            ),
         )
         self.sections.append(strtab_sec)
 
     def write(self, path: str) -> None:
-        # compute offsets
         offset = 64  # ELF header size
-        # Set offsets (but skip the NULL section)
+
+        # Fix section offsets now. (but skip the NULL section)
         for sec in self.sections[1:]:
-            offset = align(offset, sec.sh_addralign)
-            sec.sh_offset = offset
+            offset = align(offset, sec.header.sh_addralign)
+            sec.header.sh_offset = offset
             offset += len(sec.padded_data())
 
         shstrtab_sec_name_offset: int = self.shstrtab.add(".shstrtab")
         shstrtab_sec = Section(
             name=".shstrtab",
-            sh_name=shstrtab_sec_name_offset,
-            sh_type=cast("int", ENUM_SH_TYPE["SHT_STRTAB"]),
-            sh_flags=0,
-            sh_addr=0,
-            sh_offset=offset,
-            sh_size=len(self.shstrtab.data),
-            sh_link=0,
-            sh_info=0,
-            sh_addralign=8,
-            sh_entsize=0,
             data=self.shstrtab.data,
+            header=self.ElfShdr(
+                sh_name=shstrtab_sec_name_offset,
+                sh_type=datatypes.Constants.SHT_STRTAB,
+                sh_flags=0,
+                sh_addr=0,
+                sh_offset=offset,
+                sh_size=len(self.shstrtab.data),
+                sh_link=0,
+                sh_info=0,
+                sh_addralign=8,
+                sh_entsize=0,
+            ),
         )
         offset += len(shstrtab_sec.data)
 
@@ -191,11 +197,11 @@ class ELFWriter:
 
             # write sections (but skip the NULL section)
             for sec in self.sections[1:]:
-                f.seek(sec.sh_offset)
+                f.seek(sec.header.sh_offset)
                 f.write(sec.padded_data())
 
             # write shstrtab
-            f.seek(shstrtab_sec.sh_offset)
+            f.seek(shstrtab_sec.header.sh_offset)
             f.write(shstrtab_sec.data)
 
             # write section headers

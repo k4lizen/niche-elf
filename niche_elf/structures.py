@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-import struct
 from dataclasses import dataclass, field
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from elftools.elf.enums import ENUM_E_MACHINE, ENUM_E_TYPE, ENUM_ST_INFO_TYPE
+from elftools.elf.enums import ENUM_ST_INFO_TYPE
+
+if TYPE_CHECKING:
+    import ctypes
 
 
 @dataclass
@@ -58,44 +60,24 @@ class Section:
     # `data` is the data of the section (also not in the section header)
     data: bytes
     # https://www.man7.org/linux/man-pages/man5/elf.5.html#:~:text=Section%20header%20%28Shdr
-    sh_name: int
-    sh_type: int
-    sh_flags: int
-    sh_addr: int
-    # sh_offset is here in the actual order
-    sh_size: int
-    sh_link: int
-    sh_info: int
-    sh_addralign: int
-    sh_entsize: int
-    sh_offset: int = -1  # populated during write()
+    header: ctypes.Structure
+    # self.header.sh_offset should initially be set to -1 and then later populated
+    # during write.
 
     def padded_data(self) -> bytes:
-        pad_len = (-len(self.data)) % self.sh_addralign
-        return self.data + b"\x00" * pad_len
+        pad_len = (-len(self.data)) % self.header.sh_addralign
+        return bytes(self.data + b"\x00" * pad_len)
 
     def packed_header(self) -> bytes:
-        if len(self.data) != self.sh_size:
+        if len(self.data) != self.header.sh_size:
             raise AssertionError(
                 f"Section data is not the same size as sh_size for section {self.name} "
-                f"({len(self.data)} vs {self.sh_size}).",
+                f"({len(self.data)} vs {self.header.sh_size}).",
             )
-        if self.sh_offset == -1:
+        if self.header.sh_offset == -1:
             raise AssertionError(f"sh_offset in section {self.name} was not initialized.")
 
-        return struct.pack(
-            "<IIQQQQIIQQ",
-            self.sh_name,
-            self.sh_type,
-            self.sh_flags,
-            self.sh_addr,
-            self.sh_offset,
-            self.sh_size,
-            self.sh_link,
-            self.sh_info,
-            self.sh_addralign,
-            self.sh_entsize,
-        )
+        return bytes(self.header)
 
 
 @dataclass
@@ -115,4 +97,3 @@ class SHStrTab:
         self.entries.append(SHStrTabEntry(name, offset))
         self.data += name.encode() + b"\x00"
         return offset
-
