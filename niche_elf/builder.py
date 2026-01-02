@@ -25,6 +25,12 @@ class ELFBuilder:
         # self.ElfRel = {32: datatypes.ElfRel32, 64: datatypes.ElfRel64}[ptrsize]
         # self.ElfLinkMap = {32: datatypes.ElfLinkMap32, 64: datatypes.ElfLinkMap64}[ptrsize]
 
+        # This is the e_machine field in the ELF header. For some reason GDB does actually care
+        # quite about about this (for some arches, the symbol addresses will be truncated to 32
+        # bits, but its not clear to me which arches exactly).
+        # To prove that it otherwise does not matter we will specify uncommon architectures.
+        self.elfarch = {32: datatypes.Constants.EM_CRIS, 64: datatypes.Constants.EM_PPC64}[ptrbits]
+
         null_section = Section(
             "doesntmatter",
             b"",
@@ -184,8 +190,7 @@ class ELFBuilder:
         header = self.ElfEhdr(
             e_ident=b"\x7fELF" + bytes([2, 1, 1, 0]) + b"\x00" * 8,
             e_type=datatypes.Constants.ET_EXEC,
-            # To prove that this actually doesn't matter, we pass in a bogus architecture.
-            e_machine=datatypes.Constants.EM_AVR,
+            e_machine=self.elfarch,
             e_version=1,
             e_entry=0,
             e_phoff=0,
