@@ -116,39 +116,3 @@ class SHStrTab:
         self.data += name.encode() + b"\x00"
         return offset
 
-
-class ELFHeader:
-    def __init__(self, shoff: int = 0, shnum: int = 0, shstrndx: int = 0) -> None:
-        self.e_ident = b"\x7fELF" + bytes([2, 1, 1, 0]) + b"\x00" * 8
-        self.e_type = ENUM_E_TYPE["ET_EXEC"]
-        self.e_machine = ENUM_E_MACHINE["EM_X86_64"]
-        self.e_version = 1
-        self.e_entry = 0
-        self.e_phoff = 0
-        self.e_shoff = shoff
-        self.e_flags = 0
-        self.e_ehsize = 64
-        self.e_phentsize = 0
-        self.e_phnum = 0
-        self.e_shentsize = 64
-        self.e_shnum = shnum
-        self.e_shstrndx = shstrndx
-
-    def pack(self) -> bytes:
-        return struct.pack(
-            "<16sHHIQQQIHHHHHH",
-            self.e_ident,
-            self.e_type,
-            self.e_machine,
-            self.e_version,
-            self.e_entry,
-            self.e_phoff,
-            self.e_shoff,
-            self.e_flags,
-            self.e_ehsize,
-            self.e_phentsize,
-            self.e_phnum,
-            self.e_shentsize,
-            self.e_shnum,
-            self.e_shstrndx,
-        )

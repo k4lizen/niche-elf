@@ -1,5 +1,6 @@
 """Handles crafting a minimal ELF file using structured classes."""
 
+import ctypes
 from pathlib import Path
 from typing import cast
 
@@ -7,7 +8,7 @@ from elftools.elf.constants import SH_FLAGS
 from elftools.elf.enums import ENUM_SH_TYPE_BASE
 
 from . import datatypes
-from .structures import ELFHeader, Section, SHStrTab, Symbol
+from .structures import Section, SHStrTab, Symbol
 
 ELFCLASS64 = 2
 ELFDATA2LSB = 1
@@ -168,10 +169,25 @@ class ELFWriter:
         shnum = len(self.sections) + 1  # all + shstrtab
         shstrndx = shnum - 1
 
-        header = ELFHeader(shoff=shoff, shnum=shnum, shstrndx=shstrndx)
+        header = self.ElfEhdr(
+            e_ident=b"\x7fELF" + bytes([2, 1, 1, 0]) + b"\x00" * 8,
+            e_type=datatypes.Constants.ET_EXEC,
+            e_machine=datatypes.Constants.EM_X86_64,
+            e_version=1,
+            e_entry=0,
+            e_phoff=0,
+            e_shoff=shoff,
+            e_flags=0,
+            e_ehsize=ctypes.sizeof(self.ElfEhdr),
+            e_phentsize=0,
+            e_phnum=0,
+            e_shentsize=ctypes.sizeof(self.ElfShdr),
+            e_shnum=shnum,
+            e_shstrndx=shstrndx,
+        )
 
         with Path(path).open("wb") as f:
-            f.write(header.pack())
+            f.write(bytes(header))
 
             # write sections (but skip the NULL section)
             for sec in self.sections[1:]:
