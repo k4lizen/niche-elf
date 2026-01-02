@@ -33,7 +33,7 @@ class ELFWriter:
             0,
             0,
             0,
-            0,
+            1,
             0,
         )
         self.sections: list[Section] = [null_section]

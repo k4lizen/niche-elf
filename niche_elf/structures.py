@@ -100,8 +100,11 @@ class Section:
         return self.data + b"\x00" * pad_len
 
     def packed_header(self) -> bytes:
-        if len(self.data) == self.sh_size:
-            raise AssertionError("Section data is not the same size as sh_size")
+        if len(self.data) != self.sh_size:
+            raise AssertionError(
+                f"Section data is not the same size as sh_size for section {self.name} "
+                f"({len(self.data)} vs {self.sh_size}).",
+            )
         return struct.pack(
             "<IIQQQQIIQQ",
             self.sh_name,
