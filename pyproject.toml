@@ -1,6 +1,6 @@
 [project]
 name = "niche-elf"
-version = "0.3.0"
+version = "0.3.1"
 description = "A small library that optimizes some niche operations commonly used by debugger extensions. "
 readme = "README.md"
 requires-python = ">=3.10"
@@ -11,13 +11,10 @@ authors = [
 ]
 
 classifiers = [
-    "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Operating System :: POSIX :: Linux",
-    "Development Status :: 3 - Alpha",
     "Topic :: Software Development :: Debuggers",
     "Topic :: Software Development :: Embedded Systems",
-    "Topic :: System :: Operating System Kernels"
+    "Topic :: System :: Operating System Kernels",
 ]
 
 [tool.ruff]
