@@ -32,8 +32,8 @@ class ELFWriter:
             0,
             0,
             0,
-            0,
             1,
+            0,
             0,
         )
         self.sections: list[Section] = [null_section]
@@ -47,7 +47,6 @@ class ELFWriter:
             sh_type=cast("int", ENUM_SH_TYPE["SHT_PROGBITS"]),
             sh_flags=SH_FLAGS.SHF_ALLOC | SH_FLAGS.SHF_EXECINSTR,
             sh_addr=addr,
-            sh_offset=-1,  # set later
             sh_size=len(data),
             sh_link=0,
             sh_info=0,
@@ -89,7 +88,6 @@ class ELFWriter:
             sh_type=cast("int", ENUM_SH_TYPE["SHT_SYMTAB"]),
             sh_flags=0,
             sh_addr=0,
-            sh_offset=-1,  # set later
             sh_size=len(symtab_data),
             sh_link=0,
             sh_info=strtab_index,
@@ -106,7 +104,6 @@ class ELFWriter:
             sh_type=cast("int", ENUM_SH_TYPE["SHT_STRTAB"]),
             sh_flags=0,
             sh_addr=0,
-            sh_offset=-1,  # set later
             sh_size=len(strtab),
             sh_link=0,
             sh_info=0,
@@ -125,10 +122,9 @@ class ELFWriter:
             sec.sh_offset = offset
             offset += len(sec.padded_data())
 
-        shstrtab_sec_name: str = ".shstrtab"
-        shstrtab_sec_name_offset: int = self.shstrtab.add(shstrtab_sec_name)
+        shstrtab_sec_name_offset: int = self.shstrtab.add(".shstrtab")
         shstrtab_sec = Section(
-            name=".strtab",
+            name=".shstrtab",
             sh_name=shstrtab_sec_name_offset,
             sh_type=cast("int", ENUM_SH_TYPE["SHT_STRTAB"]),
             sh_flags=0,

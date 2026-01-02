@@ -88,12 +88,13 @@ class Section:
     sh_type: int
     sh_flags: int
     sh_addr: int
-    sh_offset: int
+    # sh_offset is here in the actual order
     sh_size: int
     sh_link: int
     sh_info: int
     sh_addralign: int
     sh_entsize: int
+    sh_offset: int = -1 # populated during write()
 
     def padded_data(self) -> bytes:
         pad_len = (-len(self.data)) % self.sh_addralign
@@ -105,6 +106,9 @@ class Section:
                 f"Section data is not the same size as sh_size for section {self.name} "
                 f"({len(self.data)} vs {self.sh_size}).",
             )
+        if self.sh_offset == -1:
+            raise AssertionError(f"sh_offset in section {self.name} was not initialized.")
+
         return struct.pack(
             "<IIQQQQIIQQ",
             self.sh_name,
