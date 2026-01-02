@@ -13,8 +13,18 @@ DEFAULT_BIND: int = cast("int", ENUM_ST_INFO_BIND["STB_GLOBAL"])
 class ELFFile:
     """Represents an ELF file (public API)."""
 
-    def __init__(self, arch: str = "x86_64") -> None:
-        self.arch = arch
+    def __init__(self, ptrsize: int) -> None:
+        """
+        Initialize a 32 or 64 bit ELF file.
+
+        Arguments:
+            ptrsize: Can either be 32 or 64. Determines the type of the elf file.
+
+        """
+        if ptrsize not in {32, 64}:
+            raise AssertionError(f"ptrsize must be 32 or 64, but is {ptrsize}")
+
+        self.ptrsize = ptrsize
         self.symbols: list[Symbol] = []
         self.text = b"\x90\x90\x90"
 
@@ -40,7 +50,7 @@ class ELFFile:
         self.symbols.append(Symbol.object(name, addr, size, bind))
 
     def write(self, path: str) -> None:
-        writer = ELFWriter()
+        writer = ELFWriter(self.ptrsize)
 
         writer.add_text_section(self.text)
         writer.add_symbols(self.symbols)

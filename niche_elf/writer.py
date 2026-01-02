@@ -6,6 +6,7 @@ from typing import cast
 from elftools.elf.constants import SH_FLAGS
 from elftools.elf.enums import ENUM_SH_TYPE_BASE
 
+from . import datatypes
 from .structures import ELFHeader, Section, SHStrTab, Symbol, SymTabEntry
 
 ELFCLASS64 = 2
@@ -21,7 +22,17 @@ def align(offset: int, alignment: int) -> int:
 class ELFWriter:
     """Main ELF file builder."""
 
-    def __init__(self) -> None:
+    def __init__(self, ptrsize: int) -> None:
+        if ptrsize not in {32, 64}:
+            raise AssertionError(f"ptrsize must be 32 or 64, but is {ptrsize}")
+
+        self.ElfEhdr = {32: datatypes.ElfEhdr32, 64: datatypes.ElfEhdr64}[ptrsize]
+        self.ElfPhdr = {32: datatypes.ElfPhdr32, 64: datatypes.ElfPhdr64}[ptrsize]
+        self.ElfShdr = {32: datatypes.ElfShdr32, 64: datatypes.ElfShdr64}[ptrsize]
+        self.ElfSym = {32: datatypes.ElfSym32, 64: datatypes.ElfSym64}[ptrsize]
+        # self.ElfRel = {32: datatypes.ElfRel32, 64: datatypes.ElfRel64}[ptrsize]
+        # self.ElfLinkMap = {32: datatypes.ElfLinkMap32, 64: datatypes.ElfLinkMap64}[ptrsize]
+
         null_section = Section(
             "doesntmatter",
             b"",

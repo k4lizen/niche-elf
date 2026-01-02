@@ -311,6 +311,7 @@ class ElfEhdr32(ctypes.Structure):
 
     def __init__(
         self,
+        *,
         e_ident: bytes | bytearray,
         e_type: int,
         e_machine: int,
@@ -363,6 +364,7 @@ class ElfEhdr64(ctypes.Structure):
 
     def __init__(
         self,
+        *,
         e_ident: bytes | bytearray,
         e_type: int,
         e_machine: int,
@@ -409,6 +411,7 @@ class ElfPhdr32(ctypes.Structure):
 
     def __init__(
         self,
+        *,
         p_type: int,
         p_offset: int,
         p_vaddr: int,
@@ -443,6 +446,7 @@ class ElfPhdr64(ctypes.Structure):
 
     def __init__(
         self,
+        *,
         p_type: int,
         p_flags: int,
         p_offset: int,
@@ -479,6 +483,7 @@ class ElfShdr32(ctypes.Structure):
 
     def __init__(
         self,
+        *,
         sh_name: int,
         sh_type: int,
         sh_flags: int,
@@ -519,6 +524,7 @@ class ElfShdr64(ctypes.Structure):
 
     def __init__(
         self,
+        *,
         sh_name: int,
         sh_type: int,
         sh_flags: int,
@@ -549,7 +555,7 @@ class ElfDynUN32(ctypes.Union):
         ("d_ptr", Elf32_Addr),
     ]
 
-    def __init__(self, d_val: int, d_ptr: int) -> None:
+    def __init__(self, *, d_val: int, d_ptr: int) -> None:
         super().__init__()
         self.d_val = d_val
         self.d_ptr = d_ptr
@@ -562,7 +568,7 @@ class ElfDyn32(ctypes.Structure):
         ("d_un", ElfDynUN32),
     ]
 
-    def __init__(self, d_tag: int, d_un: ElfDynUN32) -> None:
+    def __init__(self, *, d_tag: int, d_un: ElfDynUN32) -> None:
         super().__init__()
         self.d_tag = d_tag
         self.d_un = d_un
@@ -574,7 +580,7 @@ class ElfDynUN64(ctypes.Union):
         ("d_ptr", Elf64_Addr),
     ]
 
-    def __init__(self, d_val: int, d_ptr: int) -> None:
+    def __init__(self, *, d_val: int, d_ptr: int) -> None:
         super().__init__()
         self.d_val = d_val
         self.d_ptr = d_ptr
@@ -587,7 +593,7 @@ class ElfDyn64(ctypes.Structure):
         ("d_un", ElfDynUN64),
     ]
 
-    def __init__(self, d_tag: int, d_un: ElfDynUN64) -> None:
+    def __init__(self, *, d_tag: int, d_un: ElfDynUN64) -> None:
         super().__init__()
         self.d_tag = d_tag
         self.d_un = d_un
@@ -605,10 +611,12 @@ class ElfSym32(ctypes.Structure):
 
     def __init__(
         self,
+        *,
         st_name: int,
         st_value: int,
         st_size: int,
-        st_info: int,
+        bind: int,
+        typ: int,
         st_other: int,
         st_shndx: int,
     ) -> None:
@@ -616,7 +624,7 @@ class ElfSym32(ctypes.Structure):
         self.st_name = st_name
         self.st_value = st_value
         self.st_size = st_size
-        self.st_info = st_info
+        self.st_info = (bind << 4) | typ
         self.st_other = st_other
         self.st_shndx = st_shndx
 
@@ -633,8 +641,10 @@ class ElfSym64(ctypes.Structure):
 
     def __init__(
         self,
+        *,
         st_name: int,
-        st_info: int,
+        bind: int,
+        typ: int,
         st_other: int,
         st_shndx: int,
         st_value: int,
@@ -642,7 +652,7 @@ class ElfSym64(ctypes.Structure):
     ) -> None:
         super().__init__()
         self.st_name = st_name
-        self.st_info = st_info
+        self.st_info = (bind << 4) | typ
         self.st_other = st_other
         self.st_shndx = st_shndx
         self.st_value = st_value
@@ -658,6 +668,7 @@ class ElfRel64(ctypes.Structure):
 
     def __init__(
         self,
+        *,
         r_offset: int,
         r_info: int,
         r_addend: int,
@@ -674,7 +685,7 @@ class ElfRel32(ctypes.Structure):
         ("r_info", Elf32_Word),
     ]
 
-    def __init__(self, r_offset: int, r_info: int) -> None:
+    def __init__(self, *, r_offset: int, r_info: int) -> None:
         super().__init__()
         self.r_offset = r_offset
         self.r_info = r_info
@@ -691,6 +702,7 @@ class ElfLinkMap32(ctypes.Structure):
 
     def __init__(
         self,
+        *,
         l_addr: int,
         l_name: int,
         l_ld: int,
@@ -716,6 +728,7 @@ class ElfLinkMap64(ctypes.Structure):
 
     def __init__(
         self,
+        *,
         l_addr: int,
         l_name: int,
         l_ld: int,
