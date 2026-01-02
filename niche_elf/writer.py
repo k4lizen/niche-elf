@@ -50,7 +50,7 @@ class ELFWriter:
         self.sections: list[Section] = [null_section]
         self.shstrtab = SHStrTab()
 
-    def add_text_section(self, data: bytes, addr: int = 0) -> None:
+    def add_text_section(self, data: bytes, addr: int) -> None:
         name_offset = self.shstrtab.add(".text")
         sec = Section(
             name=".text",

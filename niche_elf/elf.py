@@ -13,17 +13,20 @@ DEFAULT_BIND: int = cast("int", ENUM_ST_INFO_BIND["STB_GLOBAL"])
 class ELFFile:
     """Represents an ELF file (public API)."""
 
-    def __init__(self, ptrbits: int) -> None:
+    def __init__(self, textbase: int, ptrbits: int) -> None:
         """
         Initialize a 32 or 64 bit ELF file.
 
         Arguments:
+            textbase: The Virtual Memory Address of the .text section of the file we are
+                trying to symbolicate. (there does not need to be an actual ".text" section there)
             ptrbits: Can either be 32 or 64. Determines the type of the elf file.
 
         """
         if ptrbits not in {32, 64}:
             raise AssertionError(f"ptrbits must be 32 or 64, but is {ptrbits}")
 
+        self.textbase = textbase
         self.ptrsize = ptrbits
         self.symbols: list[Symbol] = []
         self.text = b"\x90\x90\x90"
@@ -52,7 +55,7 @@ class ELFFile:
     def write(self, path: str) -> None:
         writer = ELFWriter(self.ptrsize)
 
-        writer.add_text_section(self.text)
+        writer.add_text_section(self.text, self.textbase)
         writer.add_symbols(self.symbols)
 
         writer.write(path)

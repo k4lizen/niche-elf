@@ -53,6 +53,17 @@ pwndbg> x/20i commit_creds
    0xffffffff81110cb2:	push   rbp
 ```
 
+This is probably a good sanity test. bata:
+```
+gef> info symbol commit_creds+0x10
+commit_creds + 16 in section .text
+```
+Us:
+```
+pwndbg> info symbol commit_creds+0x10
+No symbol matches commit_creds+0x10.
+```
+
 ### Offsets not shown when examining
 
 This happens even in the decompilation workflow. The problem is simply that the output looks like this:
