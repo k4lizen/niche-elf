@@ -13,18 +13,18 @@ DEFAULT_BIND: int = cast("int", ENUM_ST_INFO_BIND["STB_GLOBAL"])
 class ELFFile:
     """Represents an ELF file (public API)."""
 
-    def __init__(self, ptrsize: int) -> None:
+    def __init__(self, ptrbits: int) -> None:
         """
         Initialize a 32 or 64 bit ELF file.
 
         Arguments:
-            ptrsize: Can either be 32 or 64. Determines the type of the elf file.
+            ptrbits: Can either be 32 or 64. Determines the type of the elf file.
 
         """
-        if ptrsize not in {32, 64}:
-            raise AssertionError(f"ptrsize must be 32 or 64, but is {ptrsize}")
+        if ptrbits not in {32, 64}:
+            raise AssertionError(f"ptrbits must be 32 or 64, but is {ptrbits}")
 
-        self.ptrsize = ptrsize
+        self.ptrsize = ptrbits
         self.symbols: list[Symbol] = []
         self.text = b"\x90\x90\x90"
 

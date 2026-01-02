@@ -7,7 +7,7 @@ from elftools.elf.constants import SH_FLAGS
 from elftools.elf.enums import ENUM_SH_TYPE_BASE
 
 from . import datatypes
-from .structures import ELFHeader, Section, SHStrTab, Symbol, SymTabEntry
+from .structures import ELFHeader, Section, SHStrTab, Symbol
 
 ELFCLASS64 = 2
 ELFDATA2LSB = 1
@@ -22,14 +22,14 @@ def align(offset: int, alignment: int) -> int:
 class ELFWriter:
     """Main ELF file builder."""
 
-    def __init__(self, ptrsize: int) -> None:
-        if ptrsize not in {32, 64}:
-            raise AssertionError(f"ptrsize must be 32 or 64, but is {ptrsize}")
+    def __init__(self, ptrbits: int) -> None:
+        if ptrbits not in {32, 64}:
+            raise AssertionError(f"ptrbits must be 32 or 64, but is {ptrbits}")
 
-        self.ElfEhdr = {32: datatypes.ElfEhdr32, 64: datatypes.ElfEhdr64}[ptrsize]
-        self.ElfPhdr = {32: datatypes.ElfPhdr32, 64: datatypes.ElfPhdr64}[ptrsize]
-        self.ElfShdr = {32: datatypes.ElfShdr32, 64: datatypes.ElfShdr64}[ptrsize]
-        self.ElfSym = {32: datatypes.ElfSym32, 64: datatypes.ElfSym64}[ptrsize]
+        self.ElfEhdr = {32: datatypes.ElfEhdr32, 64: datatypes.ElfEhdr64}[ptrbits]
+        self.ElfPhdr = {32: datatypes.ElfPhdr32, 64: datatypes.ElfPhdr64}[ptrbits]
+        self.ElfShdr = {32: datatypes.ElfShdr32, 64: datatypes.ElfShdr64}[ptrbits]
+        self.ElfSym = {32: datatypes.ElfSym32, 64: datatypes.ElfSym64}[ptrbits]
         # self.ElfRel = {32: datatypes.ElfRel32, 64: datatypes.ElfRel64}[ptrsize]
         # self.ElfLinkMap = {32: datatypes.ElfLinkMap32, 64: datatypes.ElfLinkMap64}[ptrsize]
 
@@ -74,15 +74,25 @@ class ELFWriter:
             name_offsets[s.name] = len(strtab)
             strtab += s.name.encode() + b"\x00"
 
-        symtab_entries = [SymTabEntry(0, 0, 0, 0, 0, 0, 0)] + [
-            SymTabEntry(
+        symtab_entries = [
+            self.ElfSym(
+                st_name=0,
+                st_value=0,
+                st_size=0,
+                bind=0,
+                typ=0,
+                st_other=0,
+                st_shndx=0,
+            ),
+        ] + [
+            self.ElfSym(
                 st_name=name_offsets[s.name],
-                bind=s.bind,
-                typ=s.typ,
-                st_shndx=1,  # Sucks that we are hardcoding, this is .text
                 st_value=s.value,
                 st_size=s.size,
+                bind=s.bind,
+                typ=s.typ,
                 st_other=0,
+                st_shndx=1,  # Sucks that we are hardcoding, this is .text
             )
             for s in symbols
         ]
@@ -91,7 +101,7 @@ class ELFWriter:
         # so the strtab index = len(self.sections) - 1 + 2
         strtab_index = len(self.sections) + 1
 
-        symtab_data = b"".join(e.pack() for e in symtab_entries)
+        symtab_data = b"".join(bytes(e) for e in symtab_entries)
         symtab_name_offset = self.shstrtab.add(".symtab")
         symtab_sec = Section(
             name=".symtab",

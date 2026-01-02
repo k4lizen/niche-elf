@@ -52,32 +52,6 @@ class Symbol:
 
 
 @dataclass
-class SymTabEntry:
-    # https://www.man7.org/linux/man-pages/man5/elf.5.html#:~:text=into%20this%20array%2E,-typedef
-    st_name: int
-    st_value: int
-    st_size: int
-    st_other: int
-    st_shndx: int
-    # These two make up st_info
-    bind: int
-    typ: int
-    # ==
-
-    def pack(self) -> bytes:
-        """Pack symbol into ELF64 symtab entry (24 bytes)."""
-        st_info = (self.bind << 4) | self.typ
-        return (
-            self.st_name.to_bytes(4, "little")
-            + st_info.to_bytes(1, "little")
-            + self.st_other.to_bytes(1, "little")
-            + self.st_shndx.to_bytes(2, "little")
-            + self.st_value.to_bytes(8, "little")
-            + self.st_size.to_bytes(8, "little")
-        )
-
-
-@dataclass
 class Section:
     # `name` is not in the section header, but rather added to the shstrtab.
     name: str
