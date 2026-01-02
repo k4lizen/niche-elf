@@ -1,6 +1,6 @@
 [project]
 name = "niche-elf"
-version = "0.2.0"
+version = "0.3.0"
 description = "A small library that optimizes some niche operations commonly used by debugger extensions. "
 readme = "README.md"
 requires-python = ">=3.10"
