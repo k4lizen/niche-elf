@@ -291,30 +291,30 @@ class Constants:
     DF_1_SINGLETON = 0x02000000
 
     # Flag values for the sh_flags field of section headers
-    SHF_WRITE=0x1
-    SHF_ALLOC=0x2
-    SHF_EXECINSTR=0x4
-    SHF_MERGE=0x10
-    SHF_STRINGS=0x20
-    SHF_INFO_LINK=0x40
-    SHF_LINK_ORDER=0x80
-    SHF_OS_NONCONFORMING=0x100
-    SHF_GROUP=0x200
-    SHF_TLS=0x400
-    SHF_COMPRESSED=0x800
-    SHF_MASKOS=0x0ff00000
-    SHF_EXCLUDE=0x80000000
-    SHF_MASKPROC=0xf0000000
+    SHF_WRITE = 0x1
+    SHF_ALLOC = 0x2
+    SHF_EXECINSTR = 0x4
+    SHF_MERGE = 0x10
+    SHF_STRINGS = 0x20
+    SHF_INFO_LINK = 0x40
+    SHF_LINK_ORDER = 0x80
+    SHF_OS_NONCONFORMING = 0x100
+    SHF_GROUP = 0x200
+    SHF_TLS = 0x400
+    SHF_COMPRESSED = 0x800
+    SHF_MASKOS = 0x0FF00000
+    SHF_EXCLUDE = 0x80000000
+    SHF_MASKPROC = 0xF0000000
 
     # st_info bindings in the symbol header
-    STB_LOCAL=0
-    STB_GLOBAL=1
-    STB_WEAK=2
-    STB_NUM=3
-    STB_LOOS=10
-    STB_HIOS=12
-    STB_LOPROC=13
-    STB_HIPROC=15
+    STB_LOCAL = 0
+    STB_GLOBAL = 1
+    STB_WEAK = 2
+    STB_NUM = 3
+    STB_LOOS = 10
+    STB_HIOS = 12
+    STB_LOPROC = 13
+    STB_HIPROC = 15
 
     # e_machine in the ELF header
     EM_NONE = 0  # No machine

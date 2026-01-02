@@ -44,17 +44,17 @@ class ELFWriter:
         self.sections: list[Section] = [null_section]
         self.shstrtab = SHStrTab()
 
-    def add_text_section(self, data: bytes, addr: int) -> None:
+    def add_text_section(self, addr: int) -> None:
         name_offset = self.shstrtab.add(".text")
         sec = Section(
             name=".text",
-            data=data,
+            data=b"",
             header=self.ElfShdr(
                 sh_name=name_offset,
-                sh_type=datatypes.Constants.SHT_PROGBITS,
+                sh_type=datatypes.Constants.SHT_NOBITS,
                 sh_flags=datatypes.Constants.SHF_ALLOC | datatypes.Constants.SHF_EXECINSTR,
                 sh_addr=addr,
-                sh_size=len(data),
+                sh_size=-1,  # Fixed later.
                 sh_link=0,
                 sh_info=0,
                 sh_addralign=4,
@@ -67,9 +67,16 @@ class ELFWriter:
     def add_symbols(self, symbols: list[Symbol]) -> None:
         strtab = b"\x00"
         name_offsets = {}
+        max_addr: int = 0
         for s in symbols:
             name_offsets[s.name] = len(strtab)
             strtab += s.name.encode() + b"\x00"
+            max_addr = max(max_addr, s.value + s.size)
+
+        # Fix .text section size so examining in GDB works properly.
+        # Note that this may be bigger than the .text section of the loaded objfile we are trying to
+        # symbolicate (e.g. it may include the .data and .bss sections), it doesn't matter.
+        self.sections[1].header.sh_size = max_addr - self.sections[1].header.sh_addr
 
         symtab_entries = [
             self.ElfSym(

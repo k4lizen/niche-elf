@@ -26,7 +26,6 @@ class ELFFile:
         self.textbase = textbase
         self.ptrsize = ptrbits
         self.symbols: list[Symbol] = []
-        self.text = b"\x90\x90\x90"
 
     # I'm not sure whether size=0 or size=ptrsize or whatever makes a difference as a default.
     # I don't observer a difference.
@@ -52,7 +51,7 @@ class ELFFile:
     def write(self, path: str) -> None:
         writer = ELFWriter(self.ptrsize)
 
-        writer.add_text_section(self.text, self.textbase)
+        writer.add_text_section(self.textbase)
         writer.add_symbols(self.symbols)
 
         writer.write(path)

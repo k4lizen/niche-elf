@@ -64,7 +64,9 @@ pwndbg> info symbol commit_creds+0x10
 No symbol matches commit_creds+0x10.
 ```
 
-### Offsets not shown when examining
+The root cause of this issue is the same as [[#Offsets not shown in the context]].
+
+### Offsets not shown in the context
 
 This happens even in the decompilation workflow. The problem is simply that the output looks like this:
 ```
@@ -75,12 +77,16 @@ This happens even in the decompilation workflow. The problem is simply that the 
 ```
 whereas I would expect `<start>`, `<start+4>`, `<start+6>`...
 
+The root cause of this issue is the same as [[#Examine doesn't work]]. bata24 explained to me that for this to work, I have to set up the sh_size of the `.text` section (he has code for this in gef.py:create_blank_elf()). And indeed, doing that fixes the issue fully.
+
+For GDB to not throw a warning on `add-symbol-file` though, I have to make `.text` a NOBITS section (which makes sense to do anyway).
+
 
 ## Bata is weird
 
-One thing that I find weird is that he chooses a relative ELF.
+He actually passes an address to `add-symbol-file`. I see no actual benefit to doing this.
 
-Another thing is that he actually passes an address to `add-symbol-file`.
+Also he keeps .data and .bss but none of the symbols reference them.
 
 ## Design choices
 
@@ -103,6 +109,8 @@ Thirdly, decomp2dbg actually intentionally leaves in a `.bss` section in the bin
 Neither of them really use the `-s` flag with the `add-symbol-file` command (bata, VmlinuxToElfApplyCommand is an exception, but thats because the file we are adding only has a `.kernel` section).
 
 Interestingly, when I DON'T pass an address I don't have the [[#Wrong address]] issue.
+
+Passing in an address also isn't necessary for the [[#Examine doesn't work]] [[#Offsets not shown in the context]] fix.
 
 ### ELF type
 
