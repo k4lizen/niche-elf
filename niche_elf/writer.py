@@ -89,10 +89,14 @@ class ELFWriter:
             sh_flags=0,
             sh_addr=0,
             sh_size=len(symtab_data),
-            sh_link=0,
-            sh_info=strtab_index,
-            sh_addralign=1,
-            sh_entsize=0,
+            sh_link=strtab_index,
+            # See System V specific part of ELF.
+            # > A symbol table section's sh_info section header member holds
+            # > the symbol table index for the first non-local symbol.
+            # FIXME: Check does GDB actually look at this?
+            sh_info=1,
+            sh_addralign=8,
+            sh_entsize=24,
             data=symtab_data,
         )
         self.sections.append(symtab_sec)
@@ -133,7 +137,7 @@ class ELFWriter:
             sh_size=len(self.shstrtab.data),
             sh_link=0,
             sh_info=0,
-            sh_addralign=1,
+            sh_addralign=8,
             sh_entsize=0,
             data=self.shstrtab.data,
         )

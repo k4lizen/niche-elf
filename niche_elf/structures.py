@@ -94,7 +94,7 @@ class Section:
     sh_info: int
     sh_addralign: int
     sh_entsize: int
-    sh_offset: int = -1 # populated during write()
+    sh_offset: int = -1  # populated during write()
 
     def padded_data(self) -> bytes:
         pad_len = (-len(self.data)) % self.sh_addralign
