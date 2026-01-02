@@ -1,8 +1,8 @@
 """The main library entrypoint."""
 
 from . import datatypes
+from .builder import ELFBuilder
 from .structures import Symbol
-from .writer import ELFWriter
 
 DEFAULT_BIND: int = datatypes.Constants.STB_GLOBAL
 
@@ -49,7 +49,7 @@ class ELFFile:
         self.symbols.append(Symbol.object(name, addr, size, bind))
 
     def write(self, path: str) -> None:
-        writer = ELFWriter(self.ptrsize)
+        writer = ELFBuilder(self.ptrsize)
 
         writer.add_text_section(self.textbase)
         writer.add_symbols(self.symbols)

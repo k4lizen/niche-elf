@@ -11,7 +11,7 @@ def align(offset: int, alignment: int) -> int:
     return (offset + alignment - 1) & ~(alignment - 1)
 
 
-class ELFWriter:
+class ELFBuilder:
     """Main ELF file builder."""
 
     def __init__(self, ptrbits: int) -> None:
@@ -74,9 +74,10 @@ class ELFWriter:
             max_addr = max(max_addr, s.value + s.size)
 
         # Fix .text section size so examining in GDB works properly.
+        # We do +1 to cover the last symbol even if its size=0.
         # Note that this may be bigger than the .text section of the loaded objfile we are trying to
         # symbolicate (e.g. it may include the .data and .bss sections), it doesn't matter.
-        self.sections[1].header.sh_size = max_addr - self.sections[1].header.sh_addr
+        self.sections[1].header.sh_size = max_addr + 1 - self.sections[1].header.sh_addr
 
         symtab_entries = [
             self.ElfSym(
@@ -183,7 +184,8 @@ class ELFWriter:
         header = self.ElfEhdr(
             e_ident=b"\x7fELF" + bytes([2, 1, 1, 0]) + b"\x00" * 8,
             e_type=datatypes.Constants.ET_EXEC,
-            e_machine=datatypes.Constants.EM_X86_64,
+            # To prove that this actually doesn't matter, we pass in a bogus architecture.
+            e_machine=datatypes.Constants.EM_AVR,
             e_version=1,
             e_entry=0,
             e_phoff=0,
