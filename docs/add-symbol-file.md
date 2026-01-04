@@ -6,6 +6,14 @@ Okay so the idea is that we craft a minimal ELF file that contains a bunch of sy
 
 I use this: https://github.com/horsicq/XELFViewer . I have added the binary to PATH and named it `elfview`.
 
+GDB has these settings:
+```
+set debug symtab-create 1000
+set debug symfile on
+set debug symbol-lookup on
+```
+but they are franky useless.
+
 ## Issues
 
 While the decompiler symbol syncing works quite well, the kernel is giving lots of trouble. For the decompiler syncing, I don't even have to pass an address to `add-symbol-file`. The absolute addresses are hardcoded into the ELF anyway (the same is true for bata), so it just works™.
