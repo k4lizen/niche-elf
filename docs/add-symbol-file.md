@@ -107,11 +107,13 @@ mahaloz pointed out that GDB likes it when you pass in the ELF for the host mach
 And it all seems to work. So for now I am pinning the ELF to be x86_64 + ELFCLASS64 until we encounter an actual issue.
 
 
-## Bata's code is weird
+## Bata's design decisions
 
 He actually passes an address to `add-symbol-file`. I see no actual benefit to doing this.
 
 Also he keeps .data and .bss but none of the symbols reference them.
+
+Read his reasoning here: https://github.com/pwndbg/niche-elf/issues/5 . Using relative offsets and passing an `ADDR` allows him to reuse (i.e. not have to regenerate) the same ELF for different KASLR runs.
 
 ## Design choices
 
