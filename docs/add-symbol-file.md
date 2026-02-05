@@ -224,3 +224,7 @@ pwndbg> b bfd_elf32_object_p if abfd->xvec == &arm_elf32_le_vec
 pwndbg> continue
 ```
 Now we simply step through the code and see where we hit a `goto got_wrong_format_error;` or a `goto got_no_match;` and figure out what is wrong from there, the code is actually quite nicely commented.
+
+## Performance issues
+
+Currently creating an ELF for the linux kernel takes around 15.7s for niche-elf (pwndbg/pwndbg/commands/klookup.py:klookup) and 1.6s for the objcopy method (bata24/gef.py:create_symboled_elf).
