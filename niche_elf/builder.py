@@ -11,6 +11,8 @@ def align(offset: int, alignment: int) -> int:
     return (offset + alignment - 1) & ~(alignment - 1)
 
 
+# Section `sh_addralign` values taken from a normal executable.
+
 class ELFBuilder:
     """Main ELF file builder."""
 
@@ -82,7 +84,7 @@ class ELFBuilder:
                 sh_size=-1,  # Fixed later.
                 sh_link=0,
                 sh_info=0,
-                sh_addralign=4,
+                sh_addralign=0x10,
                 sh_entsize=0,
                 sh_offset=-1,  # Fixed later.
             ),
@@ -198,7 +200,7 @@ class ELFBuilder:
                 sh_size=len(self.shstrtab.data),
                 sh_link=0,
                 sh_info=0,
-                sh_addralign=8,
+                sh_addralign=1,
                 sh_entsize=0,
             ),
         )
