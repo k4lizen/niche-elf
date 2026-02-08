@@ -6,12 +6,20 @@ from pathlib import Path
 from . import datatypes
 from .structures import Section, SHStrTab, Symbol
 
+# https://refspecs.linuxbase.org/elf/elf.pdf
+
 
 def align(offset: int, alignment: int) -> int:
     return (offset + alignment - 1) & ~(alignment - 1)
 
 
+# FIXME: I think I'm missing the ELF Program header, and that LLDB will not accept the idea that
+# my symbols are in the correct places without it.
+
+# go `z integra` and compare `shouldbeworking` (gotten by building) with `main.syms.nobullshit2` (gotten by stripping and removing sections)
+
 # Section `sh_addralign` values taken from a normal executable.
+
 
 class ELFBuilder:
     """Main ELF file builder."""
@@ -179,13 +187,24 @@ class ELFBuilder:
         self.sections.append(strtab_sec)
 
     def write(self, path: str) -> None:
-        offset = 64  # ELF header size
+        # ==== Layout ====
+        # ELF header
+        # Program header table
+        # Sections:
+        #    .text
+        #    .symtab
+        #    .strtab
+        #    .shstrtab
+        # Section header table
+
+        # The ELF header + the Program header table which will only have one entry (text)
+        offset = ctypes.sizeof(self.ElfEhdr) + ctypes.sizeof(self.ElfPhdr) * 1
 
         # Fix section offsets now. (but skip the NULL section)
         for sec in self.sections[1:]:
             offset = align(offset, sec.header.sh_addralign)
             if sec.name == ".text":
-                sec.header.sh_addr = offset
+                sec.header.sh_addr = 0x1070
             sec.header.sh_offset = offset
             offset += len(sec.padded_data())
 
@@ -212,25 +231,47 @@ class ELFBuilder:
         shnum = len(self.sections) + 1  # all + shstrtab
         shstrndx = shnum - 1
 
-        header = self.ElfEhdr(
+        # Loading
+        assert self.sections[1].name == ".text"
+        text_program_header = self.ElfPhdr(
+            p_type=datatypes.Constants.PT_LOAD,
+            # RWX permissions on the segment. I give write permissions because we also put
+            # data symbols into the "text" section for simplicity. I don't know if this actually
+            # matters.
+            p_flags=1 | 2 | 4,
+            p_offset=self.sections[1].header.sh_offset,
+            # FIXME: This is the RVA for the thing i'm testing RN.
+            p_vaddr=0x01070,
+            # Physical address. Don't care.
+            p_paddr=0,
+            p_filesz=self.sections[1].header.sh_size,
+            p_memsz=self.sections[1].header.sh_size,
+            p_align=self.sections[1].header.sh_addralign,
+        )
+        program_header_table = [text_program_header]
+
+        elfheader = self.ElfEhdr(
             e_ident=self.e_ident,
             e_type=datatypes.Constants.ET_DYN,
             e_machine=self.e_machine,
             e_version=1,
-            e_entry=0,
+            e_entry=0x01070,
             e_phoff=0,
             e_shoff=shoff,
             e_flags=0,
             e_ehsize=ctypes.sizeof(self.ElfEhdr),
-            e_phentsize=0,
-            e_phnum=0,
+            e_phentsize=ctypes.sizeof(self.ElfPhdr),
+            e_phnum=len(program_header_table),
             e_shentsize=ctypes.sizeof(self.ElfShdr),
             e_shnum=shnum,
             e_shstrndx=shstrndx,
         )
 
         with Path(path).open("wb") as f:
-            f.write(bytes(header))
+            f.write(bytes(elfheader))
+
+            # (writelines does not actually write \n's)
+            f.writelines(bytes(program_header) for program_header in program_header_table)
 
             # write sections (but skip the NULL section)
             for sec in self.sections[1:]:
