@@ -71,7 +71,7 @@ class ELFBuilder:
                 sh_size=0,
                 sh_link=0,
                 sh_info=0,
-                sh_addralign=1,
+                sh_addralign=0,
                 sh_entsize=0,
                 sh_offset=0,
             ),
@@ -244,8 +244,9 @@ class ELFBuilder:
             p_vaddr=0x01070,
             # Physical address. Don't care.
             p_paddr=0,
-            p_filesz=self.sections[1].header.sh_size,
-            p_memsz=self.sections[1].header.sh_size,
+            # .text is NOBITS
+            p_filesz=0,
+            p_memsz=0x4a2,
             p_align=self.sections[1].header.sh_addralign,
         )
         program_header_table = [text_program_header]
@@ -256,7 +257,8 @@ class ELFBuilder:
             e_machine=self.e_machine,
             e_version=1,
             e_entry=0x01070,
-            e_phoff=0,
+            # The program header table is right after the ELF header.
+            e_phoff=ctypes.sizeof(self.ElfEhdr),
             e_shoff=shoff,
             e_flags=0,
             e_ehsize=ctypes.sizeof(self.ElfEhdr),
