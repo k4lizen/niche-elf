@@ -4,7 +4,7 @@ Okay so the idea is that we craft a minimal ELF file that contains a bunch of sy
 
 ## Debugging
 
-I use this: https://github.com/horsicq/XELFViewer . I have added the binary to PATH and named it `elfview`.
+I use this: https://github.com/horsicq/XELFViewer (maybe look into this https://apps.kde.org/de/elf-dissector/ ?). I have added the binary to PATH and named it `elfview`.
 
 GDB has these settings:
 ```
